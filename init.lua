@@ -615,6 +615,40 @@ require('lazy').setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+
+      -- Define the clang-format command with the style file
+      local stylePath = '/Users/jreng/Documents/Poems/___PROJECT___/___lib___/JUCE.clang-format'
+      vim.g.clang_format_command = 'clang-format --style=file:' .. stylePath
+
+      -- Function to format the buffer with clang-format
+      function FormatBuffer()
+        local filetype = vim.bo.filetype
+        if filetype == 'cpp' or filetype == 'c' then
+          local command = vim.g.clang_format_command
+          local tmpfile = vim.fn.tempname()
+
+          -- Write the buffer to a temporary file
+          vim.cmd('write! ' .. tmpfile)
+
+          -- Format the file using clang-format
+          local formatted = vim.fn.system(command .. ' < ' .. tmpfile)
+
+          -- Load the formatted text back into the buffer
+          vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.fn.split(formatted, '\n'))
+
+          -- Delete the temporary file
+          os.remove(tmpfile)
+        end
+      end
+
+      -- Autocmd to format the buffer on save for C++ files
+      vim.cmd [[
+augroup FormatOnSave
+  autocmd!
+  autocmd BufWritePre *.cpp,*.c lua FormatBuffer()
+augroup END
+]]
+
       local servers = {
         -- clangd = {},
         -- gopls = {},
@@ -789,13 +823,13 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          -- ['<C-y>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
-          --['<CR>'] = cmp.mapping.confirm { select = true },
-          --['<Tab>'] = cmp.mapping.select_next_item(),
-          --['<S-Tab>'] = cmp.mapping.select_prev_item(),
+          ['<CR>'] = cmp.mapping.confirm { select = true },
+          ['<Tab>'] = cmp.mapping.select_next_item(),
+          ['<S-Tab>'] = cmp.mapping.select_prev_item(),
 
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
@@ -843,7 +877,8 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    -- 'folke/tokyonight.nvim',
+    'navarasu/onedark.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
@@ -851,6 +886,7 @@ require('lazy').setup({
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
       vim.cmd.colorscheme 'pablo'
       vim.api.nvim_set_hl(0, 'SignColumn', { bg = 'none' })
+      vim.api.nvim_set_hl(0, 'EndOfBuffer', { fg = 'DarkGray', bg = '#000000' }) -- Customize the colors as needed
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
