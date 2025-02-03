@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -253,6 +253,8 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
+
+    'nvim-lualine/lualine.nvim', -- Add lualine.nvim
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -268,7 +270,6 @@ require('lazy').setup({
   --
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
-
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
@@ -886,7 +887,10 @@ augroup END
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
       vim.cmd.colorscheme 'pablo'
       vim.api.nvim_set_hl(0, 'SignColumn', { bg = 'none' })
-      vim.api.nvim_set_hl(0, 'EndOfBuffer', { fg = 'DarkGray', bg = '#000000' }) -- Customize the colors as needed
+      vim.api.nvim_set_hl(0, 'EndOfBuffer', { fg = '#121212' })
+      vim.api.nvim_set_hl(0, 'LineNr', { fg = '#222222' })
+      vim.api.nvim_set_hl(0, 'WinSeparator', { fg = '#5B8181' })
+
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
@@ -920,7 +924,7 @@ augroup END
       -- set use_icons to true if you have a Nerd Font
       statusline.setup { use_icons = vim.g.have_nerd_font }
 
-      -- You can configure sections in the statusline by overriding their
+      -- You can configure sections in the statusline by overriding theirstatusb
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
@@ -971,7 +975,7 @@ augroup END
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
@@ -1008,3 +1012,12 @@ augroup END
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+require('lualine').setup {
+  options = {
+    icons_enabled = true,
+    theme = 'auto',
+    component_separators = { left = '', right = '' }, -- Airline-like separators
+    section_separators = { left = '', right = '' }, -- Airline-like separators
+  },
+}
