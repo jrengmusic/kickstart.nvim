@@ -166,6 +166,10 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+
+
+
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -173,6 +177,77 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+-- Format code when pressing ESC in insert mode
+vim.keymap.set('i', '<Esc>', function()
+  local filetype = vim.bo.filetype
+  if filetype == 'cpp' or filetype == 'c' or filetype == 'objc' or filetype == 'objcpp' then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+    vim.schedule(function()
+      FormatBuffer()
+    end)
+    return ''
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+    vim.schedule(function()
+      FormatWithConform()
+    end)
+    return ''
+  end
+end, { expr = true, desc = 'Format on exit insert mode for C/C++ files and other files with conform' })
+
+-- Format code when pressing ESC in visual mode
+vim.keymap.set('v', '<Esc>', function()
+  local filetype = vim.bo.filetype
+  if filetype == 'cpp' or filetype == 'c' or filetype == 'objc' or filetype == 'objcpp' then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+    vim.schedule(function()
+      FormatBuffer()
+    end)
+    return ''
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+    vim.schedule(function()
+      FormatWithConform()
+    end)
+    return ''
+  end
+end, { expr = true, desc = 'Format on exit visual mode for C/C++ files and other files with conform' })
+
+-- Use an autocommand to format when entering normal mode from command-line mode
+vim.api.nvim_create_autocmd('ModeChanged', {
+  pattern = {'c:n'}, -- from command mode to normal mode
+  callback = function()
+    local filetype = vim.bo.filetype
+    if filetype == 'cpp' or filetype == 'c' or filetype == 'objc' or filetype == 'objcpp' then
+      vim.schedule(function()
+        FormatBuffer()
+      end)
+    else
+      vim.schedule(function()
+        FormatWithConform()
+      end)
+    end
+  end,
+  desc = 'Format C/C++ files when entering normal mode from command mode, other files with conform'
+})
+
+-- For normal mode, we'll use a different approach since pressing ESC doesn't change mode
+-- We'll map a double-tap of ESC to format while in normal mode
+vim.keymap.set('n', '<Esc><Esc>', function()
+  local filetype = vim.bo.filetype
+  if filetype == 'cpp' or filetype == 'c' or filetype == 'objc' or filetype == 'objcpp' then
+    vim.schedule(function()
+      FormatBuffer()
+    end)
+    return '<Nop>' -- Prevent further processing of the key sequence
+  else
+    vim.schedule(function()
+      FormatWithConform()
+    end)
+    return '<Nop>' -- Prevent further processing of the key sequence
+  end
+end, { expr = true, desc = 'Format in normal mode with double-tap ESC for C/C++ files and with conform for other files' })
 
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -358,6 +433,23 @@ require('lazy').setup({
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
+
+    -- Gen: Ollama-qwen2.5coder:14b
+    {
+      'David-Kunz/gen.nvim',
+      opts = {
+        model = 'qwen2.5-coder:14b',
+        host = 'localhost',
+        port = '11434',
+        display_mode = 'vertical-split',
+        show_model = true,
+      },
+      keys = {
+        { '<leader>gq', ':Gen<CR>', mode = 'v', desc = 'Gen: Chat with selection' },
+        { '<leader>gq', ':Gen<CR>', mode = 'n', desc = 'Gen: Chat with buffer' },
+      },
+    },
+
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
       -- it can fuzzy find! It's more than just a "file finder", it can search
@@ -618,27 +710,42 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
 
       -- Define the clang-format command with the style file
+      vim.env.PATH = '/opt/homebrew/bin:' .. vim.env.PATH
+
       local stylePath = '/Users/jreng/Documents/Poems/___PROJECT___/___lib___/JUCE.clang-format'
       vim.g.clang_format_command = 'clang-format --style=file:' .. stylePath
 
       -- Function to format the buffer with clang-format
       function FormatBuffer()
         local filetype = vim.bo.filetype
-        if filetype == 'cpp' or filetype == 'c' then
-          local command = vim.g.clang_format_command
-          local tmpfile = vim.fn.tempname()
+        if filetype == 'cpp' or filetype == 'c' or filetype == 'objc' or filetype == 'objcpp' then
+          -- Schedule the formatting to run after the current event is processed
+          vim.schedule(function()
+            local command = vim.g.clang_format_command
+            local tmpfile = vim.fn.tempname()
 
-          -- Write the buffer to a temporary file
-          vim.cmd('write! ' .. tmpfile)
+            -- Write the buffer to a temporary file
+            vim.cmd('write! ' .. tmpfile)
 
-          -- Format the file using clang-format
-          local formatted = vim.fn.system(command .. ' < ' .. tmpfile)
+            -- Format the file using clang-format
+            local formatted = vim.fn.system(command .. ' < ' .. tmpfile)
 
-          -- Load the formatted text back into the buffer
-          vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.fn.split(formatted, '\n'))
+            -- Load the formatted text back into the buffer
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.fn.split(formatted, '\n'))
 
-          -- Delete the temporary file
-          os.remove(tmpfile)
+            -- Delete the temporary file
+            os.remove(tmpfile)
+          end)
+        end
+      end
+
+      -- Function to format the buffer using conform for non-C/C++ files
+      function FormatWithConform()
+        local filetype = vim.bo.filetype
+        if filetype ~= 'cpp' and filetype ~= 'c' and filetype ~= 'objc' and filetype ~= 'objcpp' then
+          vim.schedule(function()
+            require('conform').format { async = true, lsp_format = 'fallback' }
+          end)
         end
       end
 
@@ -646,7 +753,7 @@ require('lazy').setup({
       vim.cmd [[
 augroup FormatOnSave
   autocmd!
-  autocmd BufWritePre *.cpp,*.c lua FormatBuffer()
+  autocmd BufWritePre *.cpp,*.c,*.h,*.hpp,*.objc,*.objcpp lua FormatBuffer()
 augroup END
 ]]
 
@@ -734,7 +841,7 @@ augroup END
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, objc = true, objcpp = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           lsp_format_opt = 'never'
@@ -885,7 +992,7 @@ augroup END
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'pablo'
+      vim.cmd 'colorscheme gfx'
       vim.api.nvim_set_hl(0, 'SignColumn', { bg = 'none' })
       vim.api.nvim_set_hl(0, 'EndOfBuffer', { fg = '#121212' })
       vim.api.nvim_set_hl(0, 'LineNr', { fg = '#222222' })
