@@ -249,7 +249,11 @@ require('lazy').setup({
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- telescope.nvim: Fuzzy finder for files, grep, diagnostics
-  -- Keybinds: <Space>s* (Search commands)
+  -- Keybinds: <Space>f* (Find commands) and <Space>s* (Search commands)
+  --   <Space>ff: Find files
+  --   <Space>fg: Live grep in workspace
+  --   <Space>fb: Find buffers
+  --   <Space>fh: Find help tags
   --   <Space>sh: Search help tags
   --   <Space>sk: Search keymaps
   --   <Space>sf: Search files
@@ -283,6 +287,12 @@ require('lazy').setup({
     },
     keys =
     {
+      -- Find commands (f prefix)
+      { '<leader>ff', function() require('telescope.builtin').find_files() end, desc = '[F]ind [F]iles' },
+      { '<leader>fg', function() require('telescope.builtin').live_grep() end, desc = '[F]ind by [G]rep' },
+      { '<leader>fb', function() require('telescope.builtin').buffers() end, desc = '[F]ind [B]uffers' },
+      { '<leader>fh', function() require('telescope.builtin').help_tags() end, desc = '[F]ind [H]elp tags' },
+      -- Search commands (s prefix)
       { '<leader>sh', function() require('telescope.builtin').help_tags() end, desc = '[S]earch [H]elp' },
       { '<leader>sk', function() require('telescope.builtin').keymaps() end, desc = '[S]earch [K]eymaps' },
       { '<leader>sf', function() require('telescope.builtin').find_files() end, desc = '[S]earch [F]iles' },
