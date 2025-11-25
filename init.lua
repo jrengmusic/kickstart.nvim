@@ -238,8 +238,9 @@ require('lazy').setup({
       {
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
+        { '<leader>f', group = '[F]ind' },
+        { '<leader>g', group = '[G]en' },
         { '<leader>r', group = '[R]ename' },
-        { '<leader>s', group = '[S]earch' },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
@@ -249,24 +250,20 @@ require('lazy').setup({
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- telescope.nvim: Fuzzy finder for files, grep, diagnostics
-  -- Keybinds: <Space>f* (Find commands) and <Space>s* (Search commands)
+  -- Keybinds: <Space>f* (Find commands)
   --   <Space>ff: Find files
   --   <Space>fg: Live grep in workspace
   --   <Space>fb: Find buffers
   --   <Space>fh: Find help tags
-  --   <Space>sh: Search help tags
-  --   <Space>sk: Search keymaps
-  --   <Space>sf: Search files
-  --   <Space>ss: Search telescope builtins
-  --   <Space>sw: Search current word
-  --   <Space>sg: Live grep in workspace
-  --   <Space>sd: Search diagnostics
-  --   <Space>sr: Resume last search
-  --   <Space>s.: Search recent files
-  --   <Space><Space>: Search buffers
+  --   <Space>fk: Find keymaps
+  --   <Space>fb: Find telescope builtins
+  --   <Space>fw: Find current word
+  --   <Space>fd: Find diagnostics
+  --   <Space>fr: Resume last find
+  --   <Space>f.: Find recent files
   --   <Space>/: Fuzzy search in current buffer
-  --   <Space>s/: Live grep in open files
-  --   <Space>sn: Search nvim config files
+  --   <Space>f/: Live grep in open files
+  --   <Space>fn: Find nvim config files
   -- ══════════════════════════════════════════════════════════════════════════
   {
     'nvim-telescope/telescope.nvim',
@@ -287,22 +284,16 @@ require('lazy').setup({
     },
     keys =
     {
-      -- Find commands (f prefix)
       { '<leader>ff', function() require('telescope.builtin').find_files() end, desc = '[F]ind [F]iles' },
       { '<leader>fg', function() require('telescope.builtin').live_grep() end, desc = '[F]ind by [G]rep' },
       { '<leader>fb', function() require('telescope.builtin').buffers() end, desc = '[F]ind [B]uffers' },
       { '<leader>fh', function() require('telescope.builtin').help_tags() end, desc = '[F]ind [H]elp tags' },
-      -- Search commands (s prefix)
-      { '<leader>sh', function() require('telescope.builtin').help_tags() end, desc = '[S]earch [H]elp' },
-      { '<leader>sk', function() require('telescope.builtin').keymaps() end, desc = '[S]earch [K]eymaps' },
-      { '<leader>sf', function() require('telescope.builtin').find_files() end, desc = '[S]earch [F]iles' },
-      { '<leader>ss', function() require('telescope.builtin').builtin() end, desc = '[S]earch [S]elect Telescope' },
-      { '<leader>sw', function() require('telescope.builtin').grep_string() end, desc = '[S]earch current [W]ord' },
-      { '<leader>sg', function() require('telescope.builtin').live_grep() end, desc = '[S]earch by [G]rep' },
-      { '<leader>sd', function() require('telescope.builtin').diagnostics() end, desc = '[S]earch [D]iagnostics' },
-      { '<leader>sr', function() require('telescope.builtin').resume() end, desc = '[S]earch [R]esume' },
-      { '<leader>s.', function() require('telescope.builtin').oldfiles() end, desc = '[S]earch Recent Files ("." for repeat)' },
-      { '<leader><leader>', function() require('telescope.builtin').buffers() end, desc = '[ ] Find existing buffers' },
+      { '<leader>fk', function() require('telescope.builtin').keymaps() end, desc = '[F]ind [K]eymaps' },
+      { '<leader>fx', function() require('telescope.builtin').builtin() end, desc = '[F]ind telescope builtins' },
+      { '<leader>fw', function() require('telescope.builtin').grep_string() end, desc = '[F]ind current [W]ord' },
+      { '<leader>fd', function() require('telescope.builtin').diagnostics() end, desc = '[F]ind [D]iagnostics' },
+      { '<leader>fr', function() require('telescope.builtin').resume() end, desc = '[F]ind [R]esume' },
+      { '<leader>f.', function() require('telescope.builtin').oldfiles() end, desc = '[F]ind recent files ("." for repeat)' },
       {
         '<leader>/',
         function()
@@ -314,21 +305,21 @@ require('lazy').setup({
         desc = '[/] Fuzzily search in current buffer'
       },
       {
-        '<leader>s/',
+        '<leader>f/',
         function()
           require('telescope.builtin').live_grep {
             grep_open_files = true,
             prompt_title = 'Live Grep in Open Files',
           }
         end,
-        desc = '[S]earch [/] in Open Files'
+        desc = '[F]ind [/] in open files'
       },
       {
-        '<leader>sn',
+        '<leader>fn',
         function()
           require('telescope.builtin').find_files { cwd = vim.fn.stdpath 'config' }
         end,
-        desc = '[S]earch [N]eovim files'
+        desc = '[F]ind [N]eovim files'
       },
     },
     config = function()
