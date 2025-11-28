@@ -453,9 +453,20 @@ require('lazy').setup({
       })
 
       -- C/C++ formatting setup
-      vim.env.PATH = '/opt/homebrew/bin:' .. vim.env.PATH
+      vim.env.PATH = '/opt/homebrew/bin:/opt/local/bin:' .. vim.env.PATH
       local stylePath = '/Users/jreng/Documents/Poems/kuassa/___lib___/JUCE.clang-format'
-      vim.g.clang_format_command = 'clang-format --style=file:' .. stylePath
+
+      -- Auto-detect clang-format (homebrew, macports llvm21, or system)
+      local clang_format_bin = 'clang-format'
+      if vim.fn.executable('clang-format') == 1 then
+        clang_format_bin = 'clang-format'
+      elseif vim.fn.executable('clang-format-mp-21') == 1 then
+        clang_format_bin = 'clang-format-mp-21'
+      elseif vim.fn.executable('/opt/homebrew/bin/clang-format') == 1 then
+        clang_format_bin = '/opt/homebrew/bin/clang-format'
+      end
+
+      vim.g.clang_format_command = clang_format_bin .. ' --style=file:' .. stylePath
 
       function FormatBuffer()
         local filetype = vim.bo.filetype
@@ -465,7 +476,15 @@ require('lazy').setup({
             local tmpfile = vim.fn.tempname()
             vim.cmd('write! ' .. tmpfile)
             local formatted = vim.fn.system(command .. ' < ' .. tmpfile)
-            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.fn.split(formatted, '\n'))
+            local exit_code = vim.v.shell_error
+
+            -- Only apply formatting if clang-format succeeded and returned content
+            if exit_code == 0 and formatted ~= '' then
+              vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.fn.split(formatted, '\n'))
+            elseif exit_code ~= 0 then
+              vim.notify('clang-format failed (exit ' .. exit_code .. '): ' .. formatted, vim.log.levels.ERROR)
+            end
+
             os.remove(tmpfile)
           end)
         end
